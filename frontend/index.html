@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS Full Stack App</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px;
+               margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h2 { color: #1F4E79; }
+        .form-group { background: white; padding: 20px;
+                      border-radius: 8px; margin-bottom: 20px;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, select { padding: 8px; margin: 5px;
+                        border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; background: #2E75B6;
+                 color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #1F4E79; }
+        #list { list-style: none; padding: 0; }
+        #list li { background: white; padding: 12px;
+                   margin: 5px 0; border-radius: 4px;
+                   border-left: 4px solid #2E75B6;
+                   box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .todo { border-left-color: #2E75B6; }
+        .contact { border-left-color: #28a745; }
+        .name { border-left-color: #fd7e14; }
+        #status { color: green; font-weight: bold; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h2>AWS Full Stack App</h2>
+    <h3>Todo / Name / Contact Manager</h3>
+
+    <div class="form-group">
+        <input id="itemId" placeholder="Unique ID (e.g. 101)" />
+        <select id="type">
+            <option value="todo">Todo</option>
+            <option value="contact">Contact</option>
+            <option value="name">Name</option>
+        </select>
+        <input id="name" placeholder="Name / Task" />
+        <input id="extra" placeholder="Extra info (optional)" />
+        <button onclick="addData()">Add Item</button>
+    </div>
+
+    <div id="status"></div>
+    <button onclick="loadData()">Refresh List</button>
+    <ul id="list"></ul>
+
+    <script>
+        const API = 'https://2jmgsopi61.execute-api.ap-southeast-1.amazonaws.com/';
+
+        async function addData() {
+            const itemId = document.getElementById('itemId').value.trim();
+            const type   = document.getElementById('type').value;
+            const name   = document.getElementById('name').value.trim();
+            const extra  = document.getElementById('extra').value.trim();
+
+            if (!itemId || !name) {
+                alert('ID and Name are required!');
+                return;
+            }
+
+            const data = { id: itemId, type, name };
+            if (extra) data.extra = extra;
+
+            document.getElementById('status').textContent = 'Saving...';
+
+            try {
+                const res = await fetch(API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                document.getElementById('status').textContent =
+                    result.message || 'Added!';
+                document.getElementById('itemId').value = '';
+                document.getElementById('name').value = '';
+                document.getElementById('extra').value = '';
+                loadData();
+            } catch (err) {
+                document.getElementById('status').textContent =
+                    'Error: ' + err.message;
+                document.getElementById('status').style.color = 'red';
+            }
+        }
+
+        async function loadData() {
+            document.getElementById('status').textContent = 'Loading...';
+            try {
+                const res = await fetch(API);
+                const data = await res.json();
+                document.getElementById('list').innerHTML =
+                    data.length === 0 ?
+                    '<li>No items yet. Add one above!</li>' :
+                    data.map(item =>
+                        `<li class="${item.type}">
+                            <strong>${item.type.toUpperCase()}</strong>:
+                            ${item.name}
+                            ${item.extra ? '— ' + item.extra : ''}
+                            <small style="color:#999">(ID: ${item.id})</small>
+                         </li>`
+                    ).join('');
+                document.getElementById('status').textContent = '';
+            } catch (err) {
+                document.getElementById('status').textContent =
+                    'Error loading data: ' + err.message;
+                document.getElementById('status').style.color = 'red';
+            }
+        }
+
+        // Load data when page opens
+        loadData();
+    </script>
+</body>
+</html>
+
