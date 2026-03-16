@@ -14,7 +14,8 @@ stages {
         steps {
             sh '''
             cd backend
-            zip backend.zip lambda.js
+            npm install
+            zip backend.zip .
             '''
         }
     }
