@@ -23,7 +23,7 @@ stages {
         steps {
             sh '''
             aws lambda update-function-code \
-            --function-name aws-serverless-backend \
+            --function-name FullStackBackend \
             --zip-file fileb://backend/backend.zip
             '''
         }
