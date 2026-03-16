@@ -1,5 +1,8 @@
-const AWS = require('aws-sdk');
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { DynamoDBDocumentClient, ScanCommand, PutCommand } = require("@aws-sdk/lib-dynamodb");
+
+const client = new DynamoDBClient({});
+const dynamodb = DynamoDBDocumentClient.from(client);
 
 const TABLE_NAME = "FullStackApp";
 
@@ -7,12 +10,17 @@ exports.handler = async (event) => {
 
 try {
 
-    // GET request → fetch all items
-    if (event.httpMethod === "GET") {
+    // Default GET if method missing
+    const method = event.httpMethod || "GET";
 
-        const result = await dynamodb.scan({
-            TableName: TABLE_NAME
-        }).promise();
+    // GET → Fetch all items
+    if (method === "GET") {
+
+        const result = await dynamodb.send(
+            new ScanCommand({
+                TableName: TABLE_NAME
+            })
+        );
 
         return {
             statusCode: 200,
@@ -23,8 +31,8 @@ try {
         };
     }
 
-    // POST request → add new item
-    if (event.httpMethod === "POST") {
+    // POST → Add item
+    if (method === "POST") {
 
         const data = JSON.parse(event.body);
 
@@ -35,10 +43,12 @@ try {
             extra: data.extra || ""
         };
 
-        await dynamodb.put({
-            TableName: TABLE_NAME,
-            Item: item
-        }).promise();
+        await dynamodb.send(
+            new PutCommand({
+                TableName: TABLE_NAME,
+                Item: item
+            })
+        );
 
         return {
             statusCode: 200,
@@ -55,12 +65,17 @@ try {
     // Unsupported request
     return {
         statusCode: 400,
+        headers: {
+            "Access-Control-Allow-Origin": "*"
+        },
         body: JSON.stringify({
             message: "Unsupported request"
         })
     };
 
 } catch (error) {
+
+    console.error(error);
 
     return {
         statusCode: 500,
