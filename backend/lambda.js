@@ -1,11 +1,10 @@
 const AWS = require('aws-sdk');
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 
-const TABLE_NAME = "fullstack-items";
+const TABLE_NAME = "FullStackApp";
 
 exports.handler = async (event) => {
 
-```
 try {
 
     // GET request → fetch all items
@@ -74,6 +73,5 @@ try {
     };
 
 }
-```
 
 };
