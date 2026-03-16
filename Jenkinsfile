@@ -1,6 +1,5 @@
 pipeline {
 
-```
 agent any
 
 stages {
@@ -24,7 +23,7 @@ stages {
         steps {
             sh '''
             aws lambda update-function-code \
-            --function-name FullStackBackend \
+            --function-name aws-serverless-backend \
             --zip-file fileb://backend/backend.zip
             '''
         }
@@ -47,6 +46,5 @@ stages {
     }
 
 }
-```
 
 }
